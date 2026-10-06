@@ -1,12 +1,8 @@
 """Shared helpers for the EE180 HW1 analysis scripts.
 
-This module centralizes path resolution, the dB conversion convention required
-by the assignment, signal measurements shared by Q1/Q2, and figure saving.
-Every script resolves paths relative to the package root, so the code works
-from `codes/` or from the package root.
-
-dB convention used everywhere:  M_dB = 20 * log10(|X| / ref + floor)
-with a shared reference `ref` and a small positive floor (1e-6) to avoid log10(0).
+Path resolution, the dB convention M_dB = 20*log10(|X|/ref + floor) with a
+shared reference and a 1e-6 floor, signal measurements shared by Q1/Q2, and
+figure saving. All paths are relative to the package root.
 """
 import csv
 from pathlib import Path
@@ -23,13 +19,11 @@ if not (ROOT / "data" / "q1_signals.npz").is_file():
 IMAGE_DIR = ROOT / "image"
 IMAGE_DIR.mkdir(exist_ok=True)
 
-# Reference floor for the dB conversion (see module docstring).
+# dB floor (see module docstring).
 DB_REF_FLOOR = 1e-6
 
 
-# ---------------------------------------------------------------------------
 # Plotting / loading
-# ---------------------------------------------------------------------------
 def to_db(magnitude, reference, floor=DB_REF_FLOOR):
     """Convert a magnitude array to dB with a shared reference and positive floor."""
     magnitude = np.asarray(magnitude, dtype=float)
@@ -56,11 +50,7 @@ def load_q1():
 
 
 def load_q3_set(folder, table_name):
-    """Load one Q3 set (reference / stage1 / stage2) with no feature extraction.
-
-    Returns (metadata rows, signals array of shape (n_recordings, 896)).
-    Paths in the metadata tables are relative to the directory of that table.
-    """
+    """Load one Q3 set; returns (metadata rows, signals of shape (n, 896))."""
     base = ROOT / "data" / "q3" / folder
     with (base / table_name).open(encoding="utf-8-sig", newline="") as f:
         metadata = list(csv.DictReader(f))
@@ -73,14 +63,12 @@ def load_q3_set(folder, table_name):
     return metadata, signals
 
 
-# ---------------------------------------------------------------------------
 # Q1/Q2 measurements (shared so both scripts quote the same numbers)
-# ---------------------------------------------------------------------------
 def single_sided_spectrum(x, fs, n_fft=None):
-    """Single-sided amplitude spectrum normalized by the record length.
+    """Single-sided amplitude spectrum, normalized by the record length.
 
-    Positive-frequency interior bins are doubled; DC (and Nyquist when
-    present) are not. Returns (frequencies_Hz, amplitudes).
+    Positive interior bins are doubled (DC and Nyquist are not).
+    Returns (frequencies_Hz, amplitudes).
     """
     n_fft = x.size if n_fft is None else n_fft
     spectrum = np.fft.rfft(x, n=n_fft)
@@ -92,10 +80,7 @@ def single_sided_spectrum(x, fs, n_fft=None):
 
 
 def tone_frequencies(x, fs, f_lo=3.5e6, f_hi=4.6e6, n_fft=2 ** 18, n_top=2):
-    """Frequencies (Hz, ascending) of the strongest local spectral peaks in a band.
-
-    Uses the full-length record with a Hann window and zero padding.
-    """
+    """Strongest local spectral peaks in a band, from the full record (Hann, zero-padded)."""
     spectrum = np.abs(np.fft.rfft(x * np.hanning(x.size), n_fft))
     freqs = np.fft.rfftfreq(n_fft, 1.0 / fs)
     band = (freqs > f_lo) & (freqs < f_hi)
@@ -108,11 +93,10 @@ def tone_frequencies(x, fs, f_lo=3.5e6, f_hi=4.6e6, n_fft=2 ** 18, n_top=2):
 
 def chirp_ridge(x, fs, nperseg, hop=8, f_lo=4.6e6, f_hi=8.0e6, nfft=8192,
                 threshold_db=-20.0):
-    """Track the chirp ridge in an STFT and fit a line f(t) = slope*t + intercept.
+    """Track the chirp ridge and fit f(t) = slope*t + intercept.
 
-    A parabolic interpolation of the dB profile around each peak gives
-    sub-bin frequency estimates. Only frames whose in-band peak exceeds
-    `threshold_db` relative to the global STFT maximum are used.
+    Sub-bin frequencies come from a parabolic fit around each dB peak; frames
+    below `threshold_db` relative to the STFT maximum are skipped.
     Returns (times_us, freqs_MHz, slope_MHz_per_us, intercept_MHz).
     """
     freq, t, z = stft(x, fs=fs, window="hann", nperseg=nperseg,
@@ -143,11 +127,9 @@ def chirp_ridge(x, fs, nperseg, hop=8, f_lo=4.6e6, f_hi=8.0e6, nfft=8192,
 
 
 def burst_lobes(x, fs, f_lo=8.5e6, f_hi=9.5e6, height_frac=0.3, min_sep_us=1.0):
-    """Envelope of the band-passed 9 MHz burst component.
+    """Band-passed 9 MHz burst: lobe times/amplitudes and center frequency.
 
-    Applies a zero-phase Butterworth band-pass and a Hilbert envelope, then
-    finds the envelope lobes. Returns (lobe_times_us, lobe_amplitudes,
-    center_frequency_Hz, envelope array).
+    Returns (lobe_times_us, lobe_amplitudes, center_frequency_Hz, envelope).
     """
     sos = butter(4, [f_lo, f_hi], btype="band", fs=fs, output="sos")
     filtered = sosfiltfilt(sos, x)

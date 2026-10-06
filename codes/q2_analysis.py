@@ -2,7 +2,7 @@
 
 Inputs : data/q1_signals.npz (only signal_A is used)
 Outputs: image/q2a_stft_windows.png, image/q2a_zoom_slices.png, image/q2c_cwt.png
-Run    : conda run -n ai python codes/q2_analysis.py
+Usage  : python codes/q2_analysis.py
 """
 import numpy as np
 import matplotlib
@@ -39,9 +39,7 @@ def spectrogram_db(x, nperseg, reference=None):
     return freq, t, to_db(magnitude, reference), reference
 
 
-# ---------------------------------------------------------------------------
-# Q2(a) - short vs long window, common reference and colour scale
-# ---------------------------------------------------------------------------
+# Q2(a): short vs long window with a common reference and colour scale
 freq_s, t_s, _, stft_ref = spectrogram_db(signal_a, SHORT_WIN)
 freq_l, t_l, _, _ = spectrogram_db(signal_a, LONG_WIN)
 _, _, db_short, _ = spectrogram_db(signal_a, SHORT_WIN, reference=stft_ref)
@@ -62,9 +60,7 @@ axes[1].set_xlim(0, 80)
 fig.colorbar(mesh, ax=axes, label="magnitude (dB, common reference)", shrink=0.9)
 save_fig(fig, "q2a_stft_windows.png")
 
-# ---------------------------------------------------------------------------
-# Q2(a) - component measurements
-# ---------------------------------------------------------------------------
+# Q2(a): component measurements
 tones = tone_frequencies(signal_a, fs) / 1e6
 tone_sep_mhz = tones[1] - tones[0]
 
@@ -106,9 +102,7 @@ print(f"9 MHz pulse pair         : {lobe_times[0]:.2f} and {lobe_times[1]:.2f} u
 print(f"9 MHz lobe widths (-6 dB): {lobe_width_us(lobe_times[0]):.2f} and "
       f"{lobe_width_us(lobe_times[1]):.2f} us")
 
-# ---------------------------------------------------------------------------
-# Q2(a) - supporting figure: zoomed spectrograms and one-dimensional slices
-# ---------------------------------------------------------------------------
+# Q2(a) supporting figure: zoomed spectrograms and slices
 band_lo, band_hi = 3.0, 8.0
 slice_times = [20.0, 45.0]
 
@@ -145,14 +139,10 @@ for row, t_sel in enumerate(slice_times, start=1):
     ax.legend(fontsize=8)
 save_fig(fig, "q2a_zoom_slices.png")
 
-# ---------------------------------------------------------------------------
-# Q2(c) - continuous wavelet transform with a complex Morlet wavelet
-#   cmor1.5-1.0: bandwidth B = 1.5, center frequency C = 1.0 (cycles/sample
-#   at scale 1). Scale-to-frequency: f = C * fs / a.
-#   PyWavelets returns L2-normalized coefficients; for a constant-amplitude
-#   tone |W| grows as sqrt(a). Each row is divided by sqrt(a) (per-scale L1
-#   normalization) so equal-amplitude components have comparable brightness.
-# ---------------------------------------------------------------------------
+# Q2(c): complex Morlet CWT. cmor1.5-1.0 has B = 1.5, C = 1.0 (cycles/sample
+# at scale 1), scale-to-frequency f = C*fs/a. PyWavelets returns L2-normalized
+# coefficients (|W| ~ sqrt(a) for a tone), so each row is divided by sqrt(a)
+# (per-scale L1) to give equal brightness for equal-amplitude components.
 WAVELET = "cmor1.5-1.0"
 F_MIN, F_MAX, N_FREQS = 2.5e6, 12e6, 400
 freqs_target = np.geomspace(F_MIN, F_MAX, N_FREQS)
@@ -182,7 +172,7 @@ ax.set_title(f"Signal A CWT magnitude, {WAVELET} (white line: -30 dB contour)")
 fig.colorbar(mesh, ax=ax, label="magnitude (dB, common reference)")
 save_fig(fig, "q2c_cwt.png")
 
-# Resolution numbers quoted in the report.
+# Resolution summary.
 bw_short = 4.0 * fs / SHORT_WIN
 bw_long = 4.0 * fs / LONG_WIN
 q_morlet = np.pi * np.sqrt(2 * 1.5) / 2.0

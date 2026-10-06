@@ -1,22 +1,19 @@
 """Q3: classify classroom ultrasound recordings with reference-set decision rules.
 
-Method (details in the report):
-  * Feature extraction is identical for every recording and every set.
-  * The analytic-signal (Hilbert) envelope is smoothed with a centered
-    five-point average. Let a_main be its global maximum.
-  * a_early is the maximum envelope in [5, 22) us and t_early its time.
-  * doublet_ratio is the maximum envelope in [t_early + 2.1, t_early + 3.4] us
-    divided by a_early (detects the strong second surface echo of the acrylic).
-  * late_ratio is the maximum envelope for t >= 22 us divided by a_early.
+Features (identical procedure for every recording):
+  a_main        = global maximum of the five-point-smoothed Hilbert envelope;
+  a_early/t_early = maximum envelope in [5, 22) us and its time;
+  late_ratio    = (max envelope for t >= 22 us) / a_early;
+  doublet_ratio = max envelope in [t_early+2.1, t_early+3.4] us / a_early
+                  (second surface echo of the acrylic plate).
 
-Decision rules chosen from the labeled reference set (explicit numbers):
-  1. doublet_ratio > 0.15            -> class 1 (acrylic, double echo)
-  2. else a_main < 0.70              -> class 3 (kitchen paper, weak echoes)
-  3. otherwise                       -> class 2 (sandpaper, single strong echo)
+Rules (thresholds chosen from the labeled reference set):
+  doublet_ratio > 0.15 -> class 1 (acrylic);
+  a_main < 0.70        -> class 3 (kitchen paper); otherwise class 2 (sandpaper).
 
 Inputs : data/q3/{reference,stage1,stage2}
 Outputs: predictions_stage1.csv, predictions.csv and Q3 figures in image/
-Run    : conda run -n ai python codes/q3_classification.py
+Usage  : python codes/q3_classification.py
 """
 import csv
 
@@ -35,11 +32,11 @@ FS_Q3 = 26.5216e6
 N_SAMPLES = 896
 TIME_US = np.arange(N_SAMPLES) / FS_Q3 * 1e6
 
-# Thresholds of the decision rules (chosen from the reference-set statistics).
+# Rule thresholds (from the reference-set statistics).
 DOUBLET_THRESHOLD = 0.15
 A_MAIN_THRESHOLD = 0.70
 
-# Echo-window definitions in microseconds.
+# Echo windows (us).
 EARLY_LO, EARLY_HI = 5.0, 22.0
 LATE_LO = 22.0
 DOUBLET_LO, DOUBLET_HI = 2.1, 3.4     # offsets from t_early
@@ -76,9 +73,7 @@ def apply_rules(features):
     return 2
 
 
-# ---------------------------------------------------------------------------
-# Load the labeled reference set and both task stages
-# ---------------------------------------------------------------------------
+# Load the reference set and both stages
 reference_meta, reference_signals = load_q3_set("reference", "labels.csv")
 stage1_meta, stage1_signals = load_q3_set("stage1", "index.csv")
 stage2_meta, stage2_signals = load_q3_set("stage2", "index.csv")
@@ -88,9 +83,7 @@ ref_features = [echo_features(x) for x in reference_signals]
 s1_features = [echo_features(x) for x in stage1_signals]
 s2_features = [echo_features(x) for x in stage2_signals]
 
-# ---------------------------------------------------------------------------
-# Descriptive statistics of the features for each reference class
-# ---------------------------------------------------------------------------
+# Reference-set feature statistics
 feature_names = ["a_main", "a_early", "a_late", "late_ratio", "t_early_us", "doublet_ratio"]
 print("--- Reference-set feature statistics (mean +/- std) ---")
 print(f'{"feature":14s} {"class 1":>18s} {"class 2":>18s} {"class 3":>18s}')
@@ -109,24 +102,20 @@ print(f"  a_main       : class 3 max {max(f['a_main'] for f, l in zip(ref_featur
       f"classes 1+2 min {min(f['a_main'] for f, l in zip(ref_features, reference_labels) if l != 3):.3f}, "
       f"rule threshold {A_MAIN_THRESHOLD}")
 
-# ---------------------------------------------------------------------------
-# Validation on the labeled reference set
-# ---------------------------------------------------------------------------
+# Validation on the reference set
 reference_predictions = np.array([apply_rules(f) for f in ref_features])
 accuracy = float(np.mean(reference_predictions == reference_labels))
 print(f"\nManual rules reference accuracy: {accuracy * 100:.1f}% "
       f"({int((reference_predictions == reference_labels).sum())}/{len(reference_labels)})")
 
-# Optional cross-check: LDA on three echo features, leave-one-out.
+# Cross-check: LDA on three echo features, leave-one-out.
 X_ref = np.array([[f["a_main"], f["late_ratio"], f["doublet_ratio"]] for f in ref_features])
 lda_accuracy = float(cross_val_score(
     LinearDiscriminantAnalysis(), X_ref, reference_labels, cv=LeaveOneOut()).mean())
 print(f"LDA leave-one-out accuracy (cross-check): {lda_accuracy * 100:.1f}%")
 
-# ---------------------------------------------------------------------------
 # Figures
-# ---------------------------------------------------------------------------
-# 1) Example signals and envelopes, four per class (reference set).
+# 1) Reference signals and envelopes, four per class.
 fig, axes = plt.subplots(3, 4, figsize=(15, 7.5), sharex=True, sharey=True,
                          constrained_layout=True)
 for row, c in enumerate((1, 2, 3)):
@@ -196,7 +185,7 @@ for panel, (key, ylabel) in enumerate([("a_main", "a_main"),
     ax.grid(alpha=0.3, axis="y")
 save_fig(fig, "q3_features.png")
 
-# 3) Example time-frequency views, one reference recording per class, dB display.
+# 3) Example STFTs (dB) for one reference recording per class.
 example_indices = [int(np.where(reference_labels == c)[0][0]) for c in (1, 2, 3)]
 fig, axes = plt.subplots(3, 1, figsize=(11, 7), sharex=True, sharey=True,
                          constrained_layout=True)
@@ -219,9 +208,7 @@ axes[2].set_xlim(0, 34)
 fig.colorbar(mesh, ax=axes, label="magnitude (dB, common reference)", shrink=0.9)
 save_fig(fig, "q3_stft_examples.png")
 
-# ---------------------------------------------------------------------------
-# Predictions for both stages, written into the supplied templates
-# ---------------------------------------------------------------------------
+# Predictions for both stages
 def write_predictions(template_name, metadata, features):
     """Fill predicted_class in a supplied template, keeping sample_ids in order."""
     template_path = ROOT / template_name
