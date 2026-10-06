@@ -115,7 +115,7 @@ for ax, name, db in [(axes[0], "A", stft_db_a), (axes[1], "B", stft_db_b)]:
     ax.text(30, m["intercept_mhz"] + m["slope_mhz_per_us"] * 30 + 0.5,
             f"{direction}-chirp {m['slope_mhz_per_us'] * 1e3:+.0f} GHz/s",
             color="white", fontsize=9)
-    ax.annotate(f"9 MHz pulse pair\n{m['lobe_times_us'][0]:.0f} / {m['lobe_times_us'][1]:.0f} us",
+    ax.annotate(f"9 MHz pulse pair\n{m['lobe_times_us'][0]:.1f} / {m['lobe_times_us'][1]:.1f} us",
                 xy=(m["lobe_times_us"][1], 9.0),
                 xytext=(m["lobe_times_us"][1] - 22, 10.6),
                 color="white", fontsize=8,

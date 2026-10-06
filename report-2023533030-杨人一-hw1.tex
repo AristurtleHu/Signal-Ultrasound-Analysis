@@ -93,8 +93,9 @@ which makes the spectral magnitudes of A and B look alike.
 STFT parameters are exactly as required: Hann window of 240 samples
 ($4\us$), hop 6 samples ($0.1\us$), $N_{\mathrm{FFT}}=4096$, no detrending.
 Boundary handling: \texttt{boundary=None} and \texttt{padded=False}, i.e.\ no
-signal extension; only windows that fit entirely inside the record are
-analyzed, so the first and last $2\us$ are not covered. The two spectrograms
+signal extension; only complete windows inside the record are used, so window
+centers span $2$--$78\us$ and no padding or boundary extension is applied.
+The two spectrograms
 share one magnitude reference (the largest STFT magnitude of either signal) and
 one color scale ($-80$ to $0$\,dB) (Fig.~\ref{fig:q1b}).
 
@@ -171,14 +172,15 @@ magnitude across the two) and the same $-80\ldots0$\,dB color scale.
   the long-window spectrogram (and confirmed by the full-record FFT); the
   short-window main lobe ($1.88\MHz$) merges them into a single $4\MHz$ band.
   \item \textbf{Linear up-chirp} from $\approx4.9\MHz$ at $\approx4\us$ to
-  $\approx7.1\MHz$ at $\approx76\us$. A line fit to the ridge gives
-  $f(t)=4.84+0.029\,t$ ($\MHz$, $\us$), i.e.\ $+(29$--$30)\GHz/s$; the slight
-  spread of the estimate with window length indicates a small non-linearity.
+  $\approx7.1\MHz$ at $\approx76\us$. A line fit to the ridge (1024-sample
+  window) gives $f(t)=4.84+0.0291\,t$ ($\MHz$, $\us$); a 512-sample window
+  gives $4.80+0.0299\,t$. Both correspond to $+(29$--$30)\GHz/s$.
   The distance between the chirp and the upper tone grows with time:
   $0.78\MHz$ at $5\us$, $1.22\MHz$ at $20\us$, $1.95\MHz$ at $45\us$, and
   $2.82\MHz$ at $75\us$. The long window resolves the chirp from the tones at
-  all these times; the short window cannot separate them below
-  $\approx20\us$ (Fig.~\ref{fig:q2aslices}).
+  all these times; with the short window the chirp and the upper tone merge
+  while their separation stays below its $1.88\MHz$ main lobe, i.e.\ before
+  $\approx40\us$ (Fig.~\ref{fig:q2aslices}).
   \item \textbf{9\,MHz pulse pair} centered at $9.02\MHz$ with lobes at
   $21.5\us$ and $24.5\us$ (separation $2.97\us$, each lobe $\approx1.7\us$
   long at $-6$\,dB). The short window resolves the two lobes; the long window
@@ -186,9 +188,10 @@ magnitude across the two) and the same $-80\ldots0$\,dB color scale.
 \end{enumerate}
 
 The slices in Fig.~\ref{fig:q2aslices} support these estimates directly: at
-$t=20\us$ the long window shows three peaks ($3.80$, $4.20$, and the chirp at
-$5.42\MHz$), while the short window shows one broad peak; at $t=45\us$ the
-long window shows the tones and the chirp at $6.15\MHz$.
+$t=20\us$ the long window shows three peaks (the tones at $3.8$ and
+$4.2\MHz$ and the chirp at $\approx5.4\MHz$), while the short window shows one
+broad peak; at $t=45\us$ the long window shows the tones and the chirp at
+$\approx6.1\MHz$.
 
 \subsection*{(b) Time--frequency resolution trade-off}
 
@@ -317,12 +320,13 @@ The classes have clear physical signatures (Figs.~\ref{fig:q3ref} and
   plate), hence doublet\_ratio $0.20$--$0.39$.
   \item \textbf{Class 2 (sandpaper):} one dominant echo at $\approx12.4\us$
   with no nearby secondary echo (doublet\_ratio $\le0.023$) and only weak late
-  scattering ($a_{\text{late}}\le0.15$).
+  scattering ($a_{\text{late}}\le0.17$).
   \item \textbf{Class 3 (kitchen paper):} weak echoes overall
-  ($a_{\text{main}}<0.63$): an early echo at $\approx12\us$ and, in most
-  recordings, a second weak echo at $\approx26.5\us$ (late\_ratio up to
-  $\approx4.5$). Within-class variation is larger here; two reference
-  recordings have almost no late echo.
+  ($a_{\text{main}}<0.63$): an early echo at $\approx12\us$ and a later weak
+  echo at $\approx26.5\us$ (late\_ratio up to $\approx5$). Within-class
+  variation is larger here: in one recording (REF037) the late echo is almost
+  absent, and in two recordings (REF031, REF037) the early echo is stronger
+  than the late one.
 \end{itemize}
 
 \begin{figure}[htbp]

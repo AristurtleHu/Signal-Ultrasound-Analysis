@@ -27,8 +27,8 @@ VMIN, VMAX = -80.0, 0.0
 def spectrogram_db(x, nperseg, reference=None):
     """Hann-window STFT in dB with an optional shared reference.
 
-    boundary=None means no signal extension: only full windows inside the
-    record are analysed, so the outer nperseg/2 samples are not covered.
+    boundary=None: no signal extension, only complete windows inside the
+    record; window centers span nperseg/2 to N - nperseg/2.
     """
     freq, t, z = stft(x, fs=fs, window="hann", nperseg=nperseg,
                       noverlap=nperseg - HOP, nfft=NFFT, detrend=False,
@@ -40,8 +40,9 @@ def spectrogram_db(x, nperseg, reference=None):
 
 
 # Q2(a): short vs long window with a common reference and colour scale
-freq_s, t_s, _, stft_ref = spectrogram_db(signal_a, SHORT_WIN)
-freq_l, t_l, _, _ = spectrogram_db(signal_a, LONG_WIN)
+freq_s, t_s, _, short_ref = spectrogram_db(signal_a, SHORT_WIN)
+freq_l, t_l, _, long_ref = spectrogram_db(signal_a, LONG_WIN)
+stft_ref = max(short_ref, long_ref)  # common reference for both windows
 _, _, db_short, _ = spectrogram_db(signal_a, SHORT_WIN, reference=stft_ref)
 _, _, db_long, _ = spectrogram_db(signal_a, LONG_WIN, reference=stft_ref)
 
