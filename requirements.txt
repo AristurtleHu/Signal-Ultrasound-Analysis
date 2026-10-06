@@ -1,0 +1,8 @@
+numpy
+scipy
+matplotlib
+PyWavelets
+pandas
+scikit-learn
+jupyterlab
+ipykernel

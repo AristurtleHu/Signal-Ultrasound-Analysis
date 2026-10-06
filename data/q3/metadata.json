@@ -1,0 +1,29 @@
+{
+  "sampling_rate_hz": 26521600,
+  "samples_per_recording": 896,
+  "amplitude": "normalized real amplitude in [-1, 1]",
+  "signal_columns": [
+    "sample_index",
+    "normalized_amplitude"
+  ],
+  "sample_index_start": 1,
+  "classes": {
+    "1": "Acrylic",
+    "2": "Sandpaper",
+    "3": "Kitchen paper"
+  },
+  "counts": {
+    "reference": 45,
+    "stage1": 15,
+    "stage2": 47
+  },
+  "labels_provided": {
+    "reference": true,
+    "stage1": false,
+    "stage2": false
+  },
+  "anonymized_and_shuffled_sets": [
+    "stage1",
+    "stage2"
+  ]
+}

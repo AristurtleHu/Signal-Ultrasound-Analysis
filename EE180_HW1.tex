@@ -1,0 +1,205 @@
+% Compile with XeLaTeX: xelatex EE180_HW1.tex (run twice).
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xeCJK}
+
+\title{{\Large\textbf{EE180 Fall Homework 1}} \\[4pt]
+{\large\textbf{Due: October 8, 2026, 23:59}}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\textbf{Name:\quad\underline{\hspace{4cm}}\quad
+ID:\quad\underline{\hspace{4cm}}}
+\end{center}
+\vspace{0.5em}
+\noindent\rule{\textwidth}{0.4pt}
+
+\noindent\textbf{Requirements:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Use MATLAB or Python; Python is recommended.
+    \item Submit a ZIP archive named \texttt{EE180-ID-Name-hw1.zip}, containing:
+    \begin{itemize}
+        \item \texttt{codes/} folder with your source code,
+        \item \texttt{image/} folder with generated figures,
+        \item \texttt{report-ID-Name-hw1.pdf},
+        \item \texttt{predictions\_stage1.csv} and \texttt{predictions.csv} for the two stages of Question 3.
+    \end{itemize}
+    \item Use relative file paths and include brief instructions for running your code.
+    \item Plot all time--frequency representations using magnitude in decibels:
+    \[
+        M_{\mathrm{dB}}(t,f)=20\log_{10}|X(t,f)|,
+    \]
+    where $X(t,f)$ denotes the normalized transform coefficients. Use the same
+    normalization reference and color scale for plots compared within the
+    same transform. For CWT, use the corresponding coefficient magnitude
+    and map scales to frequency. State the normalization used, and apply a
+    small positive floor before taking the logarithm to avoid $\log_{10}(0)$.
+    \item Write your report in English.
+\end{itemize}
+
+\newpage
+\section*{1. Fourier and Time--Frequency Analysis}
+
+Use \textbf{Signal A} and \textbf{Signal B} in \path{data/q1_signals.mat} or
+\path{data/q1_signals.npz}. Both files contain \texttt{signal\_A},
+\texttt{signal\_B}, \texttt{time\_s} (seconds), and
+\texttt{sampling\_rate\_hz}. The sampling frequency is $60\,\mathrm{MHz}$.
+Use $\mu\mathrm{s}$ and $\mathrm{MHz}$ for your time and frequency axes.
+
+\begin{enumerate}[label=(\alph*), leftmargin=1.5em]
+    \item \textbf{Time-domain and FFT analysis.}
+
+    Plot both signals in the time domain and their single-sided FFT magnitude
+    spectra, using the same axis limits for corresponding plots and the same
+    FFT normalization. Describe the observed
+    differences and explain why the FFT magnitude spectra alone do not clearly
+    distinguish their temporal structures.
+
+    \item \textbf{STFT analysis.}
+
+    Plot the STFT magnitude spectrogram of each signal using a Hann window
+    of $240$ samples, a hop size of $6$ samples, and
+    $N_{\mathrm{FFT}}=4096$. Plot the magnitude in dB as specified in the
+    Requirements, using a common normalization reference and color scale
+    for both signals. State how signal boundaries are handled.
+
+    Describe the differences between the two signals revealed by the STFT,
+    supporting your interpretation with evidence from the plots.
+\end{enumerate}
+
+\textbf{Submission:} Include your plots, explanations, and reproducible code.
+\newpage
+\section*{2. STFT, CWT, and Time--Frequency Resolution}
+
+Use \textbf{Signal A} from Question 1 to investigate the effect of window
+length on STFT analysis and compare the results with continuous wavelet analysis.
+
+\begin{enumerate}[label=(\alph*), leftmargin=1.5em]
+    \item \textbf{STFT analysis and signal components.}
+
+    Choose a short window and a long window, and compute and plot the STFT
+    magnitude spectrogram of Signal A for each. State and justify your
+    parameter choices. Plot the magnitude in dB as specified in the Requirements.
+    Use the same window type, magnitude normalization reference, and color
+    scale for the short- and long-window results.
+
+    \textit{Hint:} You may explore several window lengths, but only two representative
+    results, one short and one long, are required.
+
+    Use the STFT results together to describe the distinct signal
+    components present in Signal A. Estimate their characteristic frequencies,
+    occurrence times, and frequency evolution where applicable. For components
+    that are close in time or frequency, estimate their separation and
+    indicate which spectrogram supports each estimate.
+
+    Support your interpretation with annotations, enlarged time--frequency
+    regions, or one-dimensional slices through the STFT magnitude.
+
+    \item \textbf{Time--frequency resolution trade-off.}
+
+    Using examples from your results, explain the trade-off between time
+    and frequency resolution as the window length changes. Discuss whether
+    one window length can adequately resolve all components of Signal A.
+
+    \item \textbf{Continuous wavelet analysis.}
+
+    Analyze Signal A using the continuous wavelet transform with a complex
+    Morlet wavelet, and plot its magnitude in dB against time and frequency,
+    following the Requirements. State the wavelet parameters, scale or
+    frequency range, and coefficient normalization used.
+
+    Compare your result with the STFT results in part (a). Discuss how well
+    the different signal components can be distinguished, and explain your
+    observations in terms of the time and frequency localization of the
+    STFT window and the wavelet. Does CWT eliminate the time--frequency resolution
+    trade-off? Support your answer with evidence from your results.
+
+    \textit{Hint:} You may explore different wavelet parameters, but presenting
+    one representative CWT result is sufficient.
+\end{enumerate}
+
+\textbf{Submission:} Include your STFT and CWT plots, parameter
+choices, component identification, discussion, and reproducible code.
+\newpage
+\section*{3. Classifying Classroom Ultrasound Recordings}
+
+In class, you will acquire ultrasound signals from three objects or sample
+configurations following the TA's demonstration. Each student will make
+three independent acquisitions per class. Differences in handling may cause
+recordings of the same class to vary.
+
+Each supplied recording is a \textbf{one-dimensional signal with 896 samples}.
+The \textbf{sampling frequency is $26.5216\,\mathrm{MHz}$}. The supplied signals
+have already been normalized to the range $[-1,1]$; no raw-ADC normalization
+is required.
+
+You will receive:
+\begin{itemize}[leftmargin=1.5em]
+    \item A labeled reference set collected by the TA:
+    \textbf{15 independent recordings per class} (45 in total).
+    \item \textbf{Stage 1:} An additional set collected by the TA, with
+    \textbf{5 recordings per class} (15 in total), separate from the reference set,
+    anonymized and shuffled, with class labels withheld.
+    \item \textbf{Stage 2:} The classroom recordings, anonymized and shuffled,
+    with class labels withheld.
+\end{itemize}
+
+Use signal analysis methods introduced in class to extract features from the
+ultrasound recordings and classify each recording in both stages as \textbf{Class 1,
+2, or 3}. Submit \textbf{one label per recording}. A README in the dataset
+folder will describe the file formats, identifiers, data layout, units,
+and acquisition metadata.
+
+\textbf{Signal decomposition and feature extraction.}
+
+Apply appropriate signal decomposition or transformation methods to analyze
+the reference recordings. Represent each recording by one set of features.
+Compute descriptive statistics of the feature values for each class, examine
+differences between classes and variation within each class, and support your
+observations with plots or summary tables. Apply the same preprocessing and
+feature-extraction procedure to the reference set and both task stages.
+If you include time--frequency plots, follow the dB display convention in the
+Requirements.
+
+\textbf{Classification.}
+
+Use the feature statistics and plots from the labeled reference set to
+\textbf{manually choose thresholds or characteristic ranges} for distinguishing
+the three classes. State your decision rules as explicit numerical conditions,
+explain how you chose them, and apply the same rules in both stages.
+
+As an \textbf{optional alternative}, you may form a feature vector for each
+recording and train a machine-learning classifier using the labeled reference
+set. \textbf{Machine learning is not required.}
+
+Describe your features, decision rules or optional model, and parameter choices.
+Use the labeled reference set to determine your thresholds or model parameters.
+Base predictions on the recorded signals rather than acquisition order or
+knowledge of which object was measured.
+
+\textbf{Two-stage task.}
+
+In \textbf{Stage 1}, classify the 15 additional TA recordings. In
+\textbf{Stage 2}, classify each shuffled classroom recording. Labels are withheld
+in both stages; submit one predicted label per recording. The TA will evaluate
+both submissions against private ground-truth labels. Students are not required
+to report task-stage accuracy or analyze errors against withheld labels.
+
+\textbf{Submission and assessment:} \textbf{Both stages must be submitted and
+are included in the assessment.} Submit \texttt{predictions\_stage1.csv} for
+Stage 1 and \texttt{predictions.csv} for Stage 2. Each file must contain the
+columns \texttt{sample\_id} (the recording identifier) and
+\texttt{predicted\_class}, with one row per recording in that stage. Encode
+\texttt{predicted\_class} as 1, 2, or 3. Describe your method and reference-set analysis
+in the report, including supporting figures, and provide reproducible code.
+
+\end{document}
